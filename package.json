@@ -10,11 +10,14 @@
     "express": "^4"
   },
   "devDependencies": {
+    "@sap/cds-dk": "^7",
+    "@sap/ux-specification": "^1.108.17",
     "sqlite3": "5.1.5"
   },
   "scripts": {
     "start": "npx cds run",
-    "watch": "npx cds watch"
+    "watch": "npx cds watch",
+    "watch-incidents": "cds watch --open incidents/webapp/index.html?sap-ui-xx-viewCache=false"
   },
   "cds": {
     "requires": {
@@ -25,5 +28,8 @@
     "odata": {
       "version": "v4"
     }
-  }
+  },
+  "sapux": [
+    "app/incidents"
+  ]
 }
