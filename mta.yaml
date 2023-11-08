@@ -1,40 +1,90 @@
-_schema-version: '3.1'
+_schema-version: "3.1"
 ID: fiori_elements_tutorial
+description: A simple CAP project.
 version: 1.0.0
-description: "A simple CAP project."
+modules:
+- name: fiori_elements_tutorial-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: fiori_elements_tutorial-db
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+  build-parameters:
+    builder: npm
+- name: fiori_elements_tutorial-db-deployer
+  type: hdb
+  path: gen/db
+  requires:
+  - name: fiori_elements_tutorial-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: fiori_elements_tutorial-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: fiori_elements_tutorial-destination-service
+    parameters:
+      content-target: true
+  - name: fiori_elements_tutorial_html_repo_host
+    parameters:
+      service-key:
+        name: fiori_elements_tutorial_html_repo_host-key
+  - name: uaa_fiori_elements_tutorial
+    parameters:
+      service-key:
+        name: uaa_fiori_elements_tutorial-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: incidents_fiori_elements_tutorial_html_repo_host
+          ServiceInstanceName: fiori_elements_tutorial-html5-app-host-service
+          ServiceKeyName: fiori_elements_tutorial_html_repo_host-key
+          sap.cloud.service: incidents
+        - Authentication: OAuth2UserTokenExchange
+          Name: incidents_uaa_fiori_elements_tutorial
+          ServiceInstanceName: fiori_elements_tutorial-xsuaa-service
+          ServiceKeyName: uaa_fiori_elements_tutorial-key
+          sap.cloud.service: incidents
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+resources:
+- name: fiori_elements_tutorial-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: fiori_elements_tutorial-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      version: 1.0.0
+    service: destination
+    service-name: fiori_elements_tutorial-destination-service
+    service-plan: lite
+- name: fiori_elements_tutorial_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+app-host    service: html5-apps-repo
+    service-name: fiori_elements_tutorial-html5-app-host-service
+    service-plan: 
+- name: uaa_fiori_elements_tutorial
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: fiori_elements_tutorial-xsuaa-service
+    service-plan: application
 parameters:
   enable-parallel-deployments: true
 build-parameters:
   before-all:
-    - builder: custom
-      commands:
-        - npx cds build --production
-modules:
-  - name: fiori_elements_tutorial-srv
-    type: nodejs
-    path: gen/srv
-    parameters:
-      buildpack: nodejs_buildpack
-    build-parameters:
-      builder: npm
-    provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
-        properties:
-          srv-url: ${default-url}
-    requires:
-      - name: fiori_elements_tutorial-db
-
-  - name: fiori_elements_tutorial-db-deployer
-    type: hdb
-    path: gen/db
-    parameters:
-      buildpack: nodejs_buildpack
-    requires:
-      - name: fiori_elements_tutorial-db
-
-resources:
-  - name: fiori_elements_tutorial-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
+  - builder: custom
+    commands:
+    - npx cds build --production
